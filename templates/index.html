@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClassHelper</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #eef8fb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .chat-container {
+    width: 420px;
+    max-width: 95vw;
+    height: 640px;
+    max-height: 92vh;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    background: linear-gradient(135deg, #118ab2, #073b4c);
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .chat-header h1 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .chat-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: 0.9;
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #eef8fb;
+  }
+
+  .message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.4;
+    font-size: 14px;
+    white-space: pre-wrap;
+  }
+
+  .message.bot {
+    background: #ffffff;
+    border: 1px solid #e2e2e2;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+
+  .message.user {
+    background: #118ab2;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-input {
+    display: flex;
+    padding: 14px;
+    border-top: 1px solid #eee;
+    background: #ffffff;
+    gap: 8px;
+  }
+
+  .chat-input input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 24px;
+    outline: none;
+    font-size: 14px;
+  }
+
+  .chat-input input:focus {
+    border-color: #118ab2;
+  }
+
+  .chat-input button {
+    background: #118ab2;
+    color: #fff;
+    border: none;
+    padding: 0 20px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .chat-input button:hover {
+    background: #073b4c;
+  }
+
+  .typing {
+    font-size: 13px;
+    color: #999;
+    align-self: flex-start;
+    padding-left: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <h1>ClassHelper</h1>
+    <p>Helping you understand class topics</p>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <div class="message bot">Hi! I'm ClassHelper. Ask me any study-related question and I'll do my best to help.</div>
+  </div>
+
+  <div class="chat-input">
+    <input type="text" id="user-input" placeholder="Type your study question..." />
+    <button id="send-btn">Send</button>
+  </div>
+</div>
+
+<script>
+  const messagesEl = document.getElementById("chat-messages");
+  const inputEl = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = "message " + sender;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "typing";
+    div.id = "typing-indicator";
+    div.textContent = "ClassHelper is typing...";
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById("typing-indicator");
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    inputEl.value = "";
+    showTyping();
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      hideTyping();
+      addMessage(data.reply, "bot");
+    } catch (err) {
+      hideTyping();
+      addMessage("Something went wrong. Please try again.", "bot");
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendMessage();
+  });
+</script>
+
+</body>
+</html>
